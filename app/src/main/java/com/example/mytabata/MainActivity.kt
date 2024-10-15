@@ -49,14 +49,14 @@ fun Counter(modifier: Modifier = Modifier) {
         )
         Button(onClick = {
             if (!counterState) {
-                object : CountDownTimer(99000, 1000) {
+                var myCounter = object : CountDownTimer(99000, 1000) {
 
                     override fun onTick(millisUntilFinished: Long) {
                         theCounter = (millisUntilFinished / 1000).toString()
                     }
 
                     override fun onFinish() {
-                        theCounter = "99"
+                        counterState = false
                     }
                 }.start()
                 counterState = true
