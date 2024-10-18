@@ -40,26 +40,32 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Counter(modifier: Modifier = Modifier) {
-    var theCounter by remember { mutableStateOf("0") }
+    var theCounter by remember { mutableStateOf(0L) }
+
+
 
     Column {
         Text(
-            text = theCounter,
+            text = theCounter.toString(),
             modifier = modifier
         )
         Button(onClick = {
+            var myCounter = object : CountDownTimer(99999, 1000) {
+
+                override fun onTick(millisUntilFinished: Long) {
+                    theCounter = millisUntilFinished / 1000
+                }
+
+                override fun onFinish() {
+                    counterState = false
+                }
+            }
+
             if (!counterState) {
-                var myCounter = object : CountDownTimer(99000, 1000) {
-
-                    override fun onTick(millisUntilFinished: Long) {
-                        theCounter = (millisUntilFinished / 1000).toString()
-                    }
-
-                    override fun onFinish() {
-                        counterState = false
-                    }
-                }.start()
+                myCounter.start()
                 counterState = true
+            } else {
+                myCounter.cancel()
             }
         }) {
             Text(
