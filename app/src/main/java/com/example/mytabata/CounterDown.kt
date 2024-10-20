@@ -1,42 +1,61 @@
 package com.example.mytabata
 
 import android.os.CountDownTimer
-import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
-class CounterDown(var segundos: Int, var loquehacealhacertick: (Long) -> Unit) {
-    private var counterState : Boolean = false
-
-    val myCounter = object : CountDownTimer((segundos * 1000L), 1000) {
-
-        override fun onTick(millisUntilFinished: Long) {
-            if (counterState) loquehacealhacertick(millisUntilFinished / 1000)
-        }
-
-        override fun onFinish() {
-            counterState = false
-            Log.i("dam2", "mensajito")
-        }
-    }
-
-    fun toggle() {
-        Log.i("dam2", "toggle: $counterState")
-        if (this.counterState){
-            this.cancel()
-
-        } else {
-            Log.i("dam2", "toggle: start")
-            this.start()
-        }
-    }
+class CounterDown(
+    var workTime: Int,
+    var restTime: Int,
+    var numSeries: Int,
+    var onTick: (Long, Boolean) -> Unit,
+    var onFinish: () -> Unit
+) {
+    private var isRunning = false
+    private var currentSeries = 0
+    private var isWorkTime = true
+    private var timer: CountDownTimer? = null
 
     fun start() {
-        counterState = true
-        this.myCounter.start()
+        if (!isRunning) {
+            isRunning = true
+            currentSeries = 1
+            isWorkTime = true
+            startTimer(workTime)
+        }
     }
 
-    fun cancel() {
-        counterState = false
-        this.myCounter.cancel()
+    fun pause() {
+        if (isRunning) {
+            isRunning = false
+            timer?.cancel()
+        }
+    }
+
+    private fun startTimer(duration: Int) {
+        timer = object : CountDownTimer(duration * 1000L, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                onTick(millisUntilFinished / 1000, isWorkTime)
+            }
+
+            override fun onFinish() {
+                if (isWorkTime) {
+                    isWorkTime = false
+                    startTimer(restTime)
+                } else {
+                    currentSeries++
+                    if (currentSeries <= numSeries) {
+                        isWorkTime = true
+                        startTimer(workTime)
+                    } else {
+                        isRunning = false
+                        onFinish()
+                    }
+                }
+            }
+        }.start()
     }
 }

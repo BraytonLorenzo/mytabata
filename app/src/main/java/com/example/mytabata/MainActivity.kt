@@ -1,7 +1,6 @@
 package com.example.mytabata
 
 import android.os.Bundle
-import android.os.CountDownTimer
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -27,7 +26,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MytabataTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Counter(
+                    TabataCounter(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -37,30 +36,53 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Counter(modifier: Modifier = Modifier) {
-    var theCounter by remember { mutableStateOf(0L) }
-    var miConterDown by remember{ mutableStateOf(CounterDown(99, {newvalue -> theCounter = newvalue}))}
+fun TabataCounter(modifier: Modifier = Modifier) {
+    var timeLeft by remember { mutableStateOf(0L) }
+    var isWorkTime by remember { mutableStateOf(true) }
+    var isRunning by remember { mutableStateOf(false) }
+
+    val counterDown = remember {
+        CounterDown(
+            workTime = 20, // Tiempo de trabajo en segundos
+            restTime = 10, // Tiempo de descanso en segundos
+            numSeries = 8, // Número de series
+            onTick = { time, work ->
+                timeLeft = time
+                isWorkTime = work
+            },
+            onFinish = {
+                isRunning = false
+            }
+        )
+    }
 
     Column {
         Text(
-            text = theCounter.toString(),
+            text = if (isRunning) {
+                if (isWorkTime) "Trabajo: $timeLeft" else "Descanso: $timeLeft"
+            } else {
+                "Presiona para iniciar"
+            },
             modifier = modifier
         )
         Button(onClick = {
-            miConterDown.toggle()
+            if (isRunning) {
+                counterDown.pause()
+                isRunning = false
+            } else {
+                counterDown.start()
+                isRunning = true
+            }
         }) {
-            Text(
-                text = "Pulsar"
-            )
+            Text(text = if (isRunning) "Pausar" else "Iniciar")
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     MytabataTheme {
-        Counter()
+        TabataCounter()
     }
 }
